@@ -11,26 +11,32 @@ function Home() {
         </p>
         <div style={styles.actions}>
           <Link to="/jobs">
-            <button className="button-primary">Find a Job</button>
+            <button className="button-primary">Jobs</button>
           </Link>
           <Link to="/login">
-            <button className="button-secondary">Sign In</button>
+            <button className="button-secondary">Login</button>
           </Link>
         </div>
       </header>
       
       <section style={styles.features}>
-        <div className="card">
-          <h3>🎮 Build Your Squad</h3>
-          <p>Find like-minded players and team up for competitive or casual play across all your favorite titles.</p>
+        <div className="card" style={styles.cardLayout}>
+          <div>
+            <h3>Build Your Squad</h3>
+            <p style={{ color: 'var(--text-color)', marginTop: '0.5rem' }}>Find like-minded players and team up for competitive or casual play across all your favorite titles.</p>
+          </div>
         </div>
-        <div className="card">
-          <h3>💼 Grow Your Career</h3>
-          <p>Connect with top employers in the gaming and tech industries. Live job feeds integrated directly with our Discord.</p>
+        <div className="card" style={styles.cardLayout}>
+          <div>
+            <h3>Grow Your Career</h3>
+            <p style={{ color: 'var(--text-color)', marginTop: '0.5rem' }}>Connect with top employers in the gaming and tech industries. Live job feeds integrated directly with our Discord.</p>
+          </div>
         </div>
-        <div className="card">
-          <h3>🏆 Community Events</h3>
-          <p>Join exclusive tournaments, networking events, and community showcases to elevate your profile.</p>
+        <div className="card" style={styles.cardLayout}>
+          <div>
+            <h3>Community Events</h3>
+            <p style={{ color: 'var(--text-color)', marginTop: '0.5rem' }}>Join exclusive tournaments, networking events, and community showcases to elevate your profile.</p>
+          </div>
         </div>
       </section>
     </div>
@@ -41,35 +47,40 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    gap: '4rem',
-    marginTop: '2rem',
+    alignItems: 'flex-start',
+    gap: '3rem',
+    marginTop: '1rem',
   },
   header: {
-    textAlign: 'center',
-    maxWidth: '800px',
+    textAlign: 'left',
+    maxWidth: '600px',
   },
   title: {
-    fontSize: '4rem',
-    color: 'var(--primary-color)',
+    fontSize: '3rem',
+    color: 'var(--text-light)',
     marginBottom: '1rem',
-    textShadow: '0 0 20px rgba(102, 252, 241, 0.4)',
+    letterSpacing: '-0.05em',
   },
   subtitle: {
-    fontSize: '1.25rem',
+    fontSize: '1.1rem',
     color: 'var(--text-color)',
-    marginBottom: '2.5rem',
+    marginBottom: '2rem',
+    lineHeight: '1.6',
   },
   actions: {
     display: 'flex',
-    gap: '1rem',
-    justifyContent: 'center',
+    gap: '0.75rem',
   },
   features: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
     width: '100%',
+  },
+  cardLayout: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '1.5rem',
   }
 };
 
