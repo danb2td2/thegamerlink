@@ -1,106 +1,144 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 function Jobs() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [remoteOnly, setRemoteOnly] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [note, setNote] = useState('');
+  const [applyState, setApplyState] = useState({ busy: false, error: '', done: false });
 
-  // Mock initial job load to simulate the API integrations we have on the bot
   useEffect(() => {
-    setTimeout(() => {
-      setJobs([
-        { id: 1, title: 'Senior Software Engineer', company: 'Google', location: 'Remote', source: 'Google Jobs' },
-        { id: 2, title: 'Cybersecurity Analyst', company: 'DefenseTech', location: 'Washington D.C.', source: 'USAJobs' },
-        { id: 3, title: 'Full Stack Developer', company: 'Twitch', location: 'San Francisco, CA', source: 'LinkedIn' },
-        { id: 4, title: 'Backend Engineer', company: 'Epic Games', location: 'Cary, NC', source: 'Arbeitnow' },
-      ]);
-      setLoading(false);
-    }, 1000);
+    api.jobs()
+      .then(({ jobs }) => setJobs(jobs))
+      .catch(() => setJobs([]))
+      .finally(() => setLoading(false));
   }, []);
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return jobs.filter((j) => {
+      if (remoteOnly && !j.remote) return false;
+      if (!q) return true;
+      const hay = `${j.title} ${j.company} ${j.location} ${j.tags.join(' ')}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [jobs, search, remoteOnly]);
+
+  function openJob(job) {
+    setSelected(job);
+    setNote('');
+    setApplyState({ busy: false, error: '', done: false });
+  }
+
+  async function handleApply(e) {
+    e.preventDefault();
+    setApplyState({ busy: true, error: '', done: false });
+    try {
+      await api.apply(selected.id, user.gamertag, note);
+      setApplyState({ busy: false, error: '', done: true });
+    } catch (err) {
+      setApplyState({ busy: false, error: err.message, done: false });
+    }
+  }
+
+  if (loading) return <div className="main-content muted">Loading active listings…</div>;
+
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h2 style={styles.title}>Live Job Board</h2>
-        <p style={styles.subtitle}>Sourced directly from LinkedIn, USAJobs, Arbeitnow, and Google Jobs.</p>
+    <div className="main-content">
+      <header className="jobs-header">
+        <h2>Live Job Board</h2>
+        <p className="muted">
+          Sourced from gaming and tech employers. {user ? 'You are signed in — apply with a quick note.' : 'Sign in to apply.'}
+        </p>
       </header>
-      
-      {loading ? (
-        <div style={styles.loader}>Loading active listings...</div>
+
+      <div className="jobs-filters">
+        <input
+          className="input"
+          style={{ maxWidth: 320 }}
+          placeholder="Search title, company, or skill…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+          <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} />
+          Remote only
+        </label>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="muted">No jobs match your filters.</p>
       ) : (
-        <div style={styles.jobList}>
-          {jobs.map(job => (
-            <div key={job.id} className="card" style={styles.jobCard}>
-              <div style={styles.jobDetails}>
-                <h3 style={styles.jobTitle}>{job.title}</h3>
-                <h4 style={styles.company}>{job.company}</h4>
-                <p style={styles.meta}>📍 {job.location}</p>
-                <p style={styles.meta}>Source: {job.source}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {filtered.map((job) => (
+            <div key={job.id} className="card job-card" onClick={() => openJob(job)}>
+              <div>
+                <h3 className="job-title">{job.title}</h3>
+                <div className="job-company">{job.company}</div>
+                <div className="job-meta">
+                  <span>📍 {job.location}</span>
+                  <span>{job.type}</span>
+                  <span>{job.salary}</span>
+                  {job.remote && <span className="tag">Remote</span>}
+                </div>
+                <div className="job-meta">
+                  {job.tags.map((t) => <span key={t} className="tag">#{t}</span>)}
+                </div>
               </div>
-              <div style={styles.action}>
-                <button className="button-secondary">Apply Now</button>
-              </div>
+              <button className="button-secondary" style={{ alignSelf: 'center', flexShrink: 0 }}>Apply</button>
             </div>
           ))}
+        </div>
+      )}
+
+      {selected && (
+        <div className="modal-backdrop" onClick={() => setSelected(null)}>
+          <div className="card modal" onClick={(e) => e.stopPropagation()}>
+            <h3>{selected.title}</h3>
+            <div className="job-company">{selected.company} · {selected.location} · {selected.type}</div>
+            <p style={{ fontSize: '0.92rem' }}>{selected.description}</p>
+            <div className="job-meta">{selected.tags.map((t) => <span key={t} className="tag">#{t}</span>)}</div>
+
+            {applyState.done ? (
+              <p style={{ color: 'var(--accent-green)' }}>
+                ✅ Application submitted! Track it from your profile and keep grinding XP in the community.
+              </p>
+            ) : user ? (
+              <form onSubmit={handleApply} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <label>Quick note to the hiring squad</label>
+                <textarea
+                  className="input"
+                  rows={3}
+                  maxLength={500}
+                  placeholder="Why are you a great fit?"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+                {applyState.error && <p style={{ color: '#ed4245', fontSize: '0.85rem' }}>{applyState.error}</p>}
+                <div style={{ display: 'flex', gap: '0.6rem' }}>
+                  <button type="submit" className="button-primary" disabled={applyState.busy}>
+                    {applyState.busy ? 'Sending…' : 'Submit application'}
+                  </button>
+                  <button type="button" className="button-secondary" onClick={() => setSelected(null)}>Close</button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                <button className="button-primary" onClick={() => navigate('/login')}>Sign in to apply</button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    width: '100%',
-  },
-  header: {
-    marginBottom: '2rem',
-  },
-  title: {
-    fontSize: '2rem',
-    color: 'var(--text-light)',
-    marginBottom: '0.5rem',
-  },
-  subtitle: {
-    color: 'var(--text-color)',
-  },
-  loader: {
-    textAlign: 'center',
-    padding: '3rem',
-    color: 'var(--text-color)',
-    fontSize: '1rem',
-  },
-  jobList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  jobCard: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1.25rem 1.5rem',
-  },
-  jobDetails: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  jobTitle: {
-    color: 'var(--text-light)',
-    fontSize: '1.1rem',
-    marginBottom: '0.1rem',
-  },
-  company: {
-    color: 'var(--text-color)',
-    fontSize: '0.9rem',
-    fontWeight: '500',
-  },
-  meta: {
-    fontSize: '0.85rem',
-    color: 'var(--secondary-color)',
-  },
-  action: {
-    marginLeft: '1rem',
-  }
-};
 
 export default Jobs;

@@ -1,46 +1,38 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate('/');
+  }
+
   return (
-    <nav style={styles.nav}>
-      <div style={styles.logo}>
-        <Link to="/" style={styles.logoText}>TheGamerLink</Link>
+    <nav className="nav">
+      <div className="nav-logo">
+        <Link to="/" className="logo-text">TheGamerLink</Link>
       </div>
-      <div style={styles.links}>
-        <Link to="/jobs" style={styles.link}>Jobs</Link>
-        <Link to="/login" style={styles.link}>Login</Link>
+      <div className="nav-links">
+        <Link to="/community" className="nav-link">Community</Link>
+        <Link to="/jobs" className="nav-link">Jobs</Link>
+        {user ? (
+          <>
+            <Link to="/profile" className="nav-link nav-user">
+              <span className="avatar-dot" style={{ background: user.accent }}>{user.gamertag[0]}</span>
+              {user.gamertag}
+            </Link>
+            <button className="button-secondary" onClick={handleLogout}>Log out</button>
+          </>
+        ) : (
+          <Link to="/login" className="button-primary">Sign in</Link>
+        )}
       </div>
     </nav>
   );
 }
-
-const styles = {
-  nav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1rem 2rem',
-    backgroundColor: 'var(--panel-bg)',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
-  },
-  logo: {
-    fontWeight: 'bold',
-    fontSize: '1.5rem',
-  },
-  logoText: {
-    color: 'var(--primary-color)',
-    textDecoration: 'none',
-  },
-  links: {
-    display: 'flex',
-    gap: '1.5rem',
-  },
-  link: {
-    color: 'var(--text-light)',
-    fontWeight: '500',
-    textDecoration: 'none',
-  }
-};
 
 export default Navbar;

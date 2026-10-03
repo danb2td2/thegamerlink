@@ -1,95 +1,77 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+const ACCENTS = ['#5865f2', '#eb459e', '#3ba55d', '#faa61a', '#ed4245', '#00b0f4'];
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [gamertag, setGamertag] = useState('');
+  const [accent, setAccent] = useState(ACCENTS[0]);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const handleLogin = (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    alert('Login feature coming soon! (Will integrate with auth provider)');
-  };
+    setError('');
+    setBusy(true);
+    try {
+      await login(gamertag.trim(), accent);
+      navigate('/community');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <div style={styles.container}>
-      <div className="card" style={styles.loginCard}>
-        <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--primary-color)' }}>Welcome Back</h2>
-        
-        <form onSubmit={handleLogin} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email Address</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              required 
+    <div className="auth-wrap">
+      <div className="card auth-card">
+        <h2>Pick your Gamertag</h2>
+        <p className="muted">
+          No passwords needed in this community build — your gamertag is your identity in chat,
+          voice rooms, and job applications.
+        </p>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label htmlFor="gamertag">Gamertag</label>
+            <input
+              id="gamertag"
+              className="input"
+              placeholder="e.g. NovaQueen"
+              value={gamertag}
+              onChange={(e) => setGamertag(e.target.value)}
+              minLength={2}
+              maxLength={32}
+              required
+              autoFocus
             />
           </div>
-          
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              required 
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label>Player color</label>
+            <div className="swatch-row">
+              {ACCENTS.map((c) => (
+                <button
+                  type="button"
+                  key={c}
+                  aria-label={`color ${c}`}
+                  className={`swatch${accent === c ? ' selected' : ''}`}
+                  style={{ background: c }}
+                  onClick={() => setAccent(c)}
+                />
+              ))}
+            </div>
           </div>
-          
-          <button type="submit" className="button-primary" style={{ width: '100%', marginTop: '1rem' }}>
-            Sign In
+          {error && <p style={{ color: '#ed4245', fontSize: '0.85rem' }}>{error}</p>}
+          <button type="submit" className="button-primary" disabled={busy} style={{ width: '100%' }}>
+            {busy ? 'Signing in…' : 'Enter the Community'}
           </button>
         </form>
-        
-        <div style={styles.footer}>
-          <p>Don't have an account? <Link to="/register">Register here</Link></p>
-        </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '60vh',
-  },
-  loginCard: {
-    width: '100%',
-    maxWidth: '450px',
-    padding: '3rem 2rem',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  label: {
-    fontSize: '0.9rem',
-    color: 'var(--text-color)',
-  },
-  input: {
-    padding: '0.75rem',
-    borderRadius: '4px',
-    border: '1px solid var(--secondary-color)',
-    backgroundColor: 'var(--bg-color)',
-    color: 'var(--text-light)',
-    outline: 'none',
-  },
-  footer: {
-    marginTop: '2rem',
-    textAlign: 'center',
-    fontSize: '0.9rem',
-  }
-};
 
 export default Login;

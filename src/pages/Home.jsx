@@ -1,87 +1,45 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Home() {
+  const { user } = useAuth();
+
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>TheGamerLink</h1>
-        <p style={styles.subtitle}>
-          The ultimate destination for gamers to build squads for play and connect with industry employers for professional career growth in gaming.
+    <div className="main-content">
+      <header className="hero">
+        <h1 className="hero-title">Play together. Level up together. Get hired together.</h1>
+        <p className="hero-sub">
+          TheGamerLink is the job seeker community that works like your favorite game:
+          hang out in live voice and video rooms, chat in real time, earn XP for being active,
+          and find your next role in a job board built for gamers.
         </p>
-        <div style={styles.actions}>
-          <Link to="/jobs">
-            <button className="button-primary">Jobs</button>
-          </Link>
-          <Link to="/login">
-            <button className="button-secondary">Login</button>
-          </Link>
+        <div className="hero-actions">
+          <Link to="/community"><button className="button-primary">Enter the Community</button></Link>
+          <Link to="/jobs"><button className="button-secondary">Browse Jobs</button></Link>
+          {!user && <Link to="/login"><button className="button-secondary">Create your Gamertag</button></Link>}
         </div>
       </header>
-      
-      <section style={styles.features}>
-        <div className="card" style={styles.cardLayout}>
-          <div>
-            <h3>Build Your Squad</h3>
-            <p style={{ color: 'var(--text-color)', marginTop: '0.5rem' }}>Find like-minded players and team up for competitive or casual play across all your favorite titles.</p>
-          </div>
+
+      <section className="features">
+        <div className="card">
+          <div className="feature-icon">💬</div>
+          <h3>Real-Time Chat</h3>
+          <p>Discord-style channels for #general, #introductions, and #job-leads — with reactions, typing indicators, and live member presence.</p>
         </div>
-        <div className="card" style={styles.cardLayout}>
-          <div>
-            <h3>Grow Your Career</h3>
-            <p style={{ color: 'var(--text-color)', marginTop: '0.5rem' }}>Connect with top employers in the gaming and tech industries. Live job feeds integrated directly with our Discord.</p>
-          </div>
+        <div className="card">
+          <div className="feature-icon">🎙️</div>
+          <h3>Voice & Video Rooms</h3>
+          <p>Jump into the Lounge for casual hangouts or Interview Prep to mock-interview with live video, just like partying up on console.</p>
         </div>
-        <div className="card" style={styles.cardLayout}>
-          <div>
-            <h3>Community Events</h3>
-            <p style={{ color: 'var(--text-color)', marginTop: '0.5rem' }}>Join exclusive tournaments, networking events, and community showcases to elevate your profile.</p>
-          </div>
+        <div className="card">
+          <div className="feature-icon">🎯</div>
+          <h3>Gamer Job Board</h3>
+          <p>Roles from Epic, Riot, Twitch, and more. Apply with a quick note and track it from your profile while you grind XP in the community.</p>
         </div>
       </section>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: '3rem',
-    marginTop: '1rem',
-  },
-  header: {
-    textAlign: 'left',
-    maxWidth: '600px',
-  },
-  title: {
-    fontSize: '3rem',
-    color: 'var(--text-light)',
-    marginBottom: '1rem',
-    letterSpacing: '-0.05em',
-  },
-  subtitle: {
-    fontSize: '1.1rem',
-    color: 'var(--text-color)',
-    marginBottom: '2rem',
-    lineHeight: '1.6',
-  },
-  actions: {
-    display: 'flex',
-    gap: '0.75rem',
-  },
-  features: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    width: '100%',
-  },
-  cardLayout: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '1.5rem',
-  }
-};
 
 export default Home;

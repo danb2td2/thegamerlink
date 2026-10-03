@@ -5,12 +5,16 @@ services:
     restart: on-failure
     volumes:
       - ./:/app
-      - node_modules:/app/node_modules
+      - node_modules_web:/app/node_modules
     environment:
       - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+      - API_INTERNAL_URL=http://api:8000
     command: ["sh", "-ec", "npm install --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 5173"]
     ports:
       - "3000:5173"
+    depends_on:
+      api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173/"]
       interval: 10s
@@ -18,5 +22,23 @@ services:
       retries: 6
       start_period: 20s
 
+  api:
+    image: node:22
+    working_dir: /app
+    restart: on-failure
+    volumes:
+      - ./:/app
+      - node_modules_api:/app/node_modules
+    command: ["sh", "-ec", "npm install --no-audit --no-fund && exec node --watch server/index.js"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
 volumes:
-  node_modules:
+  node_modules_web:
+  node_modules_api:
