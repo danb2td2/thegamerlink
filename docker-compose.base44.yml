@@ -1,0 +1,46 @@
+# Base44 sandbox / development stack for thegamerlink.
+#
+# This is a frontend-only Vite + React app: no backend, no database, no
+# external credentials. The service below runs the app straight from the
+# bind-mounted source with the Vite dev server, so edits hot-reload.
+
+services:
+  web:
+    image: node:22
+    working_dir: /app
+    labels:
+      base44.project: thegamerlink
+      base44.kind: web
+      base44.port: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      # Keep installed dependencies out of the bind mount so the sandbox
+      # checkout stays clean and the lockfile sync is deterministic.
+      - node_modules:/app/node_modules
+    environment:
+      - BASE44_PREVIEW_MODE
+      # Vite >= 6.1 appends this to server.allowedHosts, so the proxy host
+      # (<port>-<sandbox id>.$BASE44_SANDBOX_HOST_DOMAIN) is accepted.
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+      # Bind mounts in the sandbox often miss inotify events.
+      - CHOKIDAR_USEPOLLING=1
+    command:
+      - sh
+      - -ec
+      - npm ci --no-audit --no-fund && exec npx vite --host 0.0.0.0 --port 3000 --strictPort
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    restart: on-failure
+
+volumes:
+  node_modules:
